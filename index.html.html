@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="si">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#6c5ce7" />
+  <title>3 ශ්‍රේණිය ගණිත වික්‍රමය</title>
+  <style>
+    :root{
+      --ink:#24324a; --muted:#67738a; --paper:#fffdf7; --card:#ffffff;
+      --primary:#6c5ce7; --primary2:#8b7cf6; --good:#10b981; --bad:#ef476f;
+      --gold:#ffb703; --sky:#4cc9f0; --line:#e7e7f2; --shadow:0 16px 40px rgba(44,48,90,.13);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0; color:var(--ink); background:
+        radial-gradient(circle at 10% 0%,#fff3bf 0 10%,transparent 28%),
+        radial-gradient(circle at 90% 10%,#dbeafe 0 9%,transparent 28%),
+        linear-gradient(180deg,#f8f7ff,#fffdf7 55%,#eefcf6);
+      font-family:"Noto Sans Sinhala","Iskoola Pota","Malithi Web",system-ui,sans-serif;
+      min-height:100vh;
+    }
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:1100px;margin:auto;padding:18px 16px 60px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:linear-gradient(135deg,#ffd166,#ff8fab);box-shadow:var(--shadow);transform:rotate(-4deg)}
+    .brand h1{font-size:clamp(20px,4vw,32px);line-height:1.12;margin:0}
+    .brand small{color:var(--muted);font-weight:700}
+    .icon-btn,.soft-btn,.primary-btn{border:0;border-radius:16px;padding:12px 16px;font-weight:900;transition:.18s transform,.18s box-shadow,.18s opacity}
+    .icon-btn:hover,.soft-btn:hover,.primary-btn:hover{transform:translateY(-2px)}
+    .icon-btn{background:#fff;box-shadow:0 7px 20px rgba(37,42,80,.10);min-width:48px}
+    .soft-btn{background:#f0edff;color:#4f46b8}
+    .primary-btn{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;box-shadow:0 10px 24px rgba(108,92,231,.32)}
+    .primary-btn[disabled],.soft-btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+    .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin:10px 0 24px}
+    .hero-card,.side-card,.quiz-card,.report-card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.8);box-shadow:var(--shadow);border-radius:28px}
+    .hero-card{padding:28px;position:relative;overflow:hidden}
+    .hero-card:after{content:"✦";position:absolute;right:22px;top:12px;font-size:90px;color:#f3efff;z-index:0}
+    .hero-card>*{position:relative;z-index:1}
+    .hero h2{font-size:clamp(28px,5vw,50px);margin:0 0 10px;line-height:1.12}
+    .hero p{color:var(--muted);font-weight:700;max-width:680px;line-height:1.7}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    .side-card{padding:22px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+    .mini-stat{display:flex;align-items:center;gap:12px;padding:13px 14px;background:#fafaff;border-radius:18px}
+    .mini-stat .bubble{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-size:24px;background:#fff4cc}
+    .mini-stat b{font-size:20px}.mini-stat span{display:block;color:var(--muted);font-size:13px;font-weight:800}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 4px 14px}
+    .section-title h2{margin:0;font-size:clamp(23px,4vw,34px)}
+    .section-title p{margin:0;color:var(--muted);font-weight:700}
+    .topics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .topic-card{border:0;text-align:left;background:#fff;border-radius:24px;padding:18px;box-shadow:0 10px 28px rgba(41,49,90,.09);position:relative;overflow:hidden;min-height:170px;transition:.2s transform,.2s box-shadow}
+    .topic-card:hover{transform:translateY(-5px) rotate(-.2deg);box-shadow:0 17px 34px rgba(41,49,90,.15)}
+    .topic-card .topic-icon{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;font-size:29px;background:var(--topic-bg,#eef2ff)}
+    .topic-card h3{margin:12px 0 4px;font-size:20px}.topic-card p{margin:0;color:var(--muted);font-size:14px;font-weight:700}
+    .topic-card .page{position:absolute;right:14px;top:14px;font-size:12px;font-weight:900;color:#68708b;background:#f6f7fb;border-radius:999px;padding:6px 9px}
+    .mastery{height:8px;background:#eef0f7;border-radius:999px;margin-top:15px;overflow:hidden}.mastery>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#4cc9f0,#10b981);border-radius:999px}
+    .stars{margin-top:8px;color:#ffc107;letter-spacing:2px;font-size:15px;min-height:20px}
+    .hidden{display:none!important}
+
+    /* Quiz */
+    .quiz-wrap{max-width:820px;margin:12px auto}
+    .quiz-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin-bottom:12px}
+    .progress-shell{height:14px;background:#e9e8f3;border-radius:999px;overflow:hidden}.progress-bar{height:100%;width:0;background:linear-gradient(90deg,#ffb703,#fb7185,#6c5ce7);transition:.35s width;border-radius:999px}
+    .counter{font-weight:900;color:#5c6580;white-space:nowrap}
+    .quiz-card{padding:clamp(18px,4vw,32px);min-height:590px;position:relative;overflow:hidden}
+    .quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .topic-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:#f0edff;color:#4d43b9;padding:8px 12px;font-weight:900;font-size:14px}
+    .score-pill{font-weight:900;background:#fff5cc;color:#8a6500;border-radius:999px;padding:8px 12px}
+    .question{font-size:clamp(24px,4.8vw,38px);line-height:1.45;margin:18px 0;text-align:center}
+    .visual{min-height:150px;display:grid;place-items:center;padding:12px;margin:8px 0 20px;background:linear-gradient(180deg,#fbfbff,#fffef8);border:2px dashed #deddf0;border-radius:24px;overflow:hidden}
+    .options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .answer-btn{border:2px solid #e2e5f0;background:#fff;border-radius:20px;min-height:68px;padding:13px;font-size:clamp(18px,3vw,25px);font-weight:900;color:var(--ink);box-shadow:0 6px 14px rgba(45,50,90,.07);transition:.16s transform,.16s border,.16s background}
+    .answer-btn:hover{transform:translateY(-2px);border-color:#a9a0ff}.answer-btn.correct{background:#dff9ee;border-color:#10b981;color:#087a55}.answer-btn.wrong{background:#fff0f3;border-color:#ef476f;color:#b42346}.answer-btn.dim{opacity:.5}
+    .number-panel{max-width:390px;margin:auto}.number-display{height:78px;border:3px solid #d8d5ef;border-radius:20px;background:#fff;display:grid;place-items:center;font-size:42px;font-weight:1000;margin-bottom:12px;letter-spacing:3px}.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.key{border:0;border-radius:17px;background:#f0f1f8;min-height:58px;font-size:25px;font-weight:1000}.key.action{background:#e8e3ff;color:#5147b7}.key.check{background:#10b981;color:white}
+    .sequence-bank,.sequence-answer{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:70px;padding:12px;border-radius:20px}.sequence-bank{background:#f5f6fb}.sequence-answer{border:2px dashed #bbb7dc;margin-bottom:12px}.token{border:0;background:#fff;border-radius:15px;padding:12px 16px;font-size:21px;font-weight:1000;box-shadow:0 5px 13px rgba(40,45,80,.10)}
+    .parts{display:flex;gap:4px;width:min(420px,90%);height:150px}.part{flex:1;border:3px solid #5b5d75;background:#fff;transition:.15s;background}.part:first-child{border-radius:18px 0 0 18px}.part:last-child{border-radius:0 18px 18px 0}.part.on{background:#49d6b0}
+    .money-board{display:grid;gap:14px}.money-target{text-align:center;font-size:28px;font-weight:1000}.money-total{text-align:center;background:#f4f1ff;border-radius:18px;padding:12px;font-size:24px;font-weight:1000}.money-pieces{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.money{border:3px solid transparent;min-width:68px;min-height:58px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#d39b27);font-weight:1000;color:#5c3f00;box-shadow:0 7px 13px rgba(67,50,0,.18)}.money.note{border-radius:13px;background:linear-gradient(135deg,#dff8e8,#69c394);color:#124d33;min-width:108px}.money.selected{border-color:#6c5ce7;transform:translateY(-4px)}
+    .feedback{margin-top:16px;border-radius:20px;padding:16px 18px;font-weight:800;line-height:1.55;display:flex;align-items:center;justify-content:space-between;gap:14px}.feedback.good{background:#e3faef;color:#086a4d}.feedback.bad{background:#fff0f3;color:#a61b41}.feedback .next{border:0;border-radius:14px;background:#fff;padding:10px 14px;font-weight:1000;white-space:nowrap}
+    .quiz-tools{display:flex;justify-content:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .hint-box{margin:12px auto 0;max-width:620px;background:#fff8d6;border-radius:18px;padding:13px 16px;text-align:center;font-weight:800;color:#795f00}
+    .emoji-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;font-size:42px;line-height:1.2}.group-box{display:inline-flex;gap:3px;padding:8px;border:2px solid #e5d8ff;border-radius:15px;background:#fff;margin:4px}
+    .place-value{display:flex;align-items:flex-end;gap:20px;justify-content:center}.rods,.ones{display:flex;gap:5px;align-items:flex-end;flex-wrap:wrap;max-width:290px;justify-content:center}.rod{width:17px;height:100px;border:2px solid #d99800;background:repeating-linear-gradient(to bottom,#ffd84d 0 8px,#c99500 8px 10px);border-radius:3px}.one{width:25px;height:25px;background:#ffd84d;border:2px solid #c99500;border-radius:4px}
+    .clock{width:170px;height:170px}.shape-svg{width:150px;height:120px}.compare-grid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;font-size:35px;font-weight:1000;text-align:center}
+    .capacity-icons{display:flex;align-items:end;justify-content:center;gap:28px}.container-icon{display:grid;place-items:center;border:4px solid #5581b5;border-top:0;background:linear-gradient(to top,#54c6eb var(--fill,50%),transparent var(--fill,50%));border-radius:0 0 18px 18px;color:#1f3d5a;font-weight:1000;width:100px;height:var(--h,130px)}
+    .shake{animation:shake .3s}@keyframes shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-5px)}}
+    .pop{animation:pop .35s}@keyframes pop{50%{transform:scale(1.07)}}
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:99}.confetti i{position:absolute;width:10px;height:18px;border-radius:3px;animation:fall 1.2s linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(760deg);opacity:.2}}
+
+    /* Summary/report */
+    .summary{text-align:center;padding:25px}.summary .trophy{font-size:90px}.summary h2{font-size:40px;margin:4px}.summary p{font-size:20px;color:var(--muted);font-weight:800}.summary-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+    .report-card{padding:24px}.report-table{width:100%;border-collapse:collapse}.report-table th,.report-table td{text-align:left;border-bottom:1px solid var(--line);padding:12px 8px}.report-table th{color:#646c84;font-size:13px}.report-table td:last-child,.report-table th:last-child{text-align:right}
+    .footer{text-align:center;color:#788097;font-weight:700;font-size:13px;margin-top:30px;line-height:1.7}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-width:800px){.hero{grid-template-columns:1fr}.topics{grid-template-columns:repeat(2,minmax(0,1fr))}.side-card{display:grid;grid-template-columns:repeat(3,1fr)}.mini-stat{display:block;text-align:center}.mini-stat .bubble{margin:0 auto 8px}.options{grid-template-columns:1fr}.quiz-card{min-height:620px}}
+    @media(max-width:540px){.app{padding:12px 10px 40px}.topbar .brand small{display:none}.logo{width:45px;height:45px}.hero-card{padding:22px}.topics{grid-template-columns:1fr}.side-card{grid-template-columns:1fr 1fr}.side-card .mini-stat:last-child{grid-column:1/-1}.quiz-head{grid-template-columns:auto 1fr}.counter{grid-column:1/-1;text-align:center}.quiz-card{padding:16px;border-radius:22px}.question{margin:12px 0}.visual{min-height:135px}.feedback{align-items:flex-start;flex-direction:column}.feedback .next{width:100%}.topic-card{min-height:150px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="logo" aria-hidden="true">🧠</div><div><h1>ගණිත වික්‍රමය</h1><small>3 ශ්‍රේණිය • සිංහල මාධ්‍ය</small></div></div>
+      <button id="reportBtn" class="icon-btn" title="ප්‍රගති වාර්තාව" aria-label="ප්‍රගති වාර්තාව">📊</button>
+    </header>
+
+    <main id="homeView">
+      <section class="hero">
+        <div class="hero-card">
+          <h2>සෙල්ලම් කරමින්<br>ගණිතය ඉගෙන ගනිමු!</h2>
+          <p>ගණන් කිරීමේ සිට මුදල්, වේලාව, හැඩතල, භාග, පරිමාව සහ අඩු කිරීම දක්වා පාඩම් 18ක්. සෑම ප්‍රශ්නයකටම ඉඟි, ක්ෂණික ප්‍රතිචාර සහ තරු ලකුණු ඇත.</p>
+          <div class="hero-actions">
+            <button id="adventureBtn" class="primary-btn">🚀 මිශ්‍ර වික්‍රමය අරඹන්න</button>
+            <button id="quickBtn" class="soft-btn">⚡ ඉක්මන් ප්‍රශ්න 5ක්</button>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="mini-stat"><div class="bubble">⭐</div><div><b id="totalStars">0</b><span>ලැබූ තරු</span></div></div>
+          <div class="mini-stat"><div class="bubble">🔥</div><div><b id="bestStreak">0</b><span>හොඳම අඛණ්ඩ ලකුණු</span></div></div>
+          <div class="mini-stat"><div class="bubble">🎯</div><div><b id="accuracy">0%</b><span>නිවැරදි ප්‍රතිශතය</span></div></div>
+        </div>
+      </section>
+
+      <div class="section-title"><div><h2>පාඩමක් තෝරන්න</h2><p>පොතේ පිළිවෙළට සකසා ඇත</p></div></div>
+      <section id="topicGrid" class="topics" aria-label="පාඩම්"></section>
+      <p class="footer">මෙම අන්තර්ක්‍රියාකාරී පුහුණුව බ්‍රවුසරය තුළම ක්‍රියා කරයි. ප්‍රගතිය මෙම උපාංගයේ සුරැකේ.</p>
+    </main>
+
+    <main id="quizView" class="hidden">
+      <div class="quiz-wrap">
+        <div class="quiz-head">
+          <button id="quitBtn" class="icon-btn" aria-label="ප්‍රශ්නාවලියෙන් ඉවත් වන්න">←</button>
+          <div class="progress-shell"><div id="progressBar" class="progress-bar"></div></div>
+          <div id="counter" class="counter">1 / 10</div>
+        </div>
+        <section class="quiz-card" aria-live="polite">
+          <div class="quiz-meta"><span id="topicPill" class="topic-pill"></span><span id="scorePill" class="score-pill">⭐ 0</span></div>
+          <h2 id="questionText" class="question"></h2>
+          <div id="visual" class="visual"></div>
+          <div id="answerArea"></div>
+          <div id="hintBox" class="hint-box hidden"></div>
+          <div id="feedback" class="feedback hidden"></div>
+          <div class="quiz-tools">
+            <button id="hintBtn" class="soft-btn">💡 ඉඟියක්</button>
+            <button id="speakBtn" class="soft-btn">🔊 කියවන්න</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <main id="summaryView" class="hidden">
+      <div class="quiz-wrap"><section class="quiz-card summary">
+        <div id="summaryTrophy" class="trophy">🏆</div>
+        <h2 id="summaryTitle">හරිම අපූරුයි!</h2>
+        <p id="summaryText"></p>
+        <div class="summary-actions"><button id="againBtn" class="primary-btn">🔁 නැවත සෙල්ලම් කරන්න</button><button id="homeBtn" class="soft-btn">🏠 පාඩම් වෙත</button></div>
+      </section></div>
+    </main>
+
+    <main id="reportView" class="hidden">
+      <section class="report-card">
+        <div class="section-title"><div><h2>ප්‍රගති වාර්තාව</h2><p>මෙම උපාංගයේ සුරැකි ප්‍රතිඵල</p></div><button id="closeReportBtn" class="soft-btn">වසන්න</button></div>
+        <div id="reportContent"></div>
+        <div style="margin-top:18px"><button id="resetBtn" class="soft-btn">🗑️ ප්‍රගතිය නැවත සකසන්න</button></div>
+      </section>
+    </main>
+  </div>
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (s) => document.querySelector(s);
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - .5);
+  const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+  const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
+  const fmt = n => String(n);
+
+  const topicData = [
+    {id:1,title:"ගණන් කිරීම",sub:"2, 5 සහ 10 බැගින් ගණන් කරමු",icon:"🧮",pages:"පිටු 1–5",bg:"#fff1b8"},
+    {id:2,title:"සංඛ්‍යා – 1",sub:"1 සිට 100 දක්වා සංඛ්‍යා",icon:"🔢",pages:"පිටු 6–11",bg:"#dff4ff"},
+    {id:3,title:"සංඛ්‍යා එකතු කිරීම – 1",sub:"දෙඅංක සංඛ්‍යා එකතු කිරීම",icon:"➕",pages:"පිටු 12–15",bg:"#ffe4d5"},
+    {id:4,title:"දිග මැනීම – 1",sub:"ඒකක සහ මීටරය",icon:"📏",pages:"පිටු 16–17",bg:"#eee2ff"},
+    {id:5,title:"සංඛ්‍යා අඩු කිරීම – 1",sub:"20 තුළ අඩු කිරීම",icon:"➖",pages:"පිටු 18–20",bg:"#dff8e9"},
+    {id:6,title:"කාලය",sub:"දින, මාස සහ වේලාව",icon:"🕒",pages:"පිටු 21–25",bg:"#ffe0ef"},
+    {id:7,title:"ගුණ කිරීම – 1",sub:"දෙකේ ගුණන වගුව",icon:"✖️",pages:"පිටු 26–29",bg:"#dff4ff"},
+    {id:8,title:"ඝන වස්තු හා හැඩතල",sub:"2D හැඩ සහ 3D වස්තු",icon:"🔷",pages:"පිටු 30–35",bg:"#fff0d9"},
+    {id:9,title:"බෙදීම – 1",sub:"සම සමව බෙදා ගනිමු",icon:"🍊",pages:"පිටු 36–38",bg:"#ece2ff"},
+    {id:10,title:"භාග",sub:"භාගය සහ කාල",icon:"🍰",pages:"පිටු 39–42",bg:"#e3f8dc"},
+    {id:11,title:"දිශා",sub:"වම, දකුණ සහ මාර්ග",icon:"🧭",pages:"පිටු 43–45",bg:"#ffe5f1"},
+    {id:12,title:"පළමු වාර පුනරීක්ෂණය",sub:"පාඩම් 1–11 මිශ්‍ර පුහුණුව",icon:"🎓",pages:"පිටු 46–58",bg:"#fff6b7"},
+    {id:13,title:"සංඛ්‍යා – 2",sub:"101 සිට 200 දක්වා",icon:"💯",pages:"පිටු 59–70",bg:"#e0f4ff"},
+    {id:14,title:"මුදල් – 1",sub:"රුපියල්, කාසි සහ නෝට්ටු",icon:"🪙",pages:"පිටු 71–75",bg:"#fff1bf"},
+    {id:15,title:"සංඛ්‍යා රටා",sub:"ඊළඟ සංඛ්‍යාව සොයමු",icon:"🧩",pages:"පිටු 76–78",bg:"#eee3ff"},
+    {id:16,title:"සංඛ්‍යා එකතු කිරීම – 2",sub:"මාරු කිරීම සමඟ එකතු කිරීම",icon:"🚂",pages:"පිටු 79–81",bg:"#e1f7e7"},
+    {id:17,title:"පරිමාව හා ධාරිතාව – 1",sub:"බහාලුම් සහ ලීටරය",icon:"🫗",pages:"පිටු 82–84",bg:"#e1f0ff"},
+    {id:18,title:"සංඛ්‍යා අඩු කිරීම – 2",sub:"ණයට ගැනීම සමඟ අඩු කිරීම",icon:"🧠",pages:"පිටු 85–87",bg:"#ffe4e7"}
+  ];
+
+  const views = {home:$("#homeView"),quiz:$("#quizView"),summary:$("#summaryView"),report:$("#reportView")};
+  const storageKey = "g3_sinhala_math_progress_v1";
+  let progress = loadProgress();
+  let state = {topicId:null,count:10,index:0,score:0,streak:0,questions:[],current:null,attempts:0,firstTry:true,lastGen:"",selected:[],number:"",mode:"mixed"};
+
+  function blankProgress(){return {total:0,correct:0,stars:0,bestStreak:0,topics:{}}}
+  function loadProgress(){try{return {...blankProgress(),...JSON.parse(localStorage.getItem(storageKey)||"{}")}}catch{return blankProgress()}}
+  function saveProgress(){localStorage.setItem(storageKey,JSON.stringify(progress));renderStats();renderTopics()}
+  function topicStats(id){return progress.topics[id]||{total:0,correct:0,stars:0}}
+  function showView(name){Object.values(views).forEach(v=>v.classList.add("hidden"));views[name].classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"})}
+
+  function renderStats(){
+    $("#totalStars").textContent=progress.stars||0;
+    $("#bestStreak").textContent=progress.bestStreak||0;
+    $("#accuracy").textContent=progress.total?Math.round(progress.correct/progress.total*100)+"%":"0%";
+  }
+  function renderTopics(){
+    $("#topicGrid").innerHTML=topicData.map(t=>{
+      const s=topicStats(t.id), pct=s.total?Math.round(s.correct/s.total*100):0, stars=Math.min(3,Math.floor(pct/25));
+      return `<button class="topic-card" style="--topic-bg:${t.bg}" data-topic="${t.id}">
+        <span class="page">${t.pages}</span><span class="topic-icon">${t.icon}</span><h3>${t.id}. ${t.title}</h3><p>${t.sub}</p>
+        <div class="mastery"><span style="width:${pct}%"></span></div><div class="stars">${"★".repeat(stars)}${"☆".repeat(3-stars)} <small>${s.total?`${pct}%`:"නව පාඩම"}</small></div></button>`
+    }).join("");
+    document.querySelectorAll("[data-topic]").forEach(b=>b.addEventListener("click",()=>startQuiz(Number(b.dataset.topic),10,"topic")));
+  }
+
+  const optionQuestion=(topic,prompt,answer,distractors,visual="",hint="",explain="")=>{
+    const correct=String(answer), opts=[...new Set([answer,...distractors].map(String))];
+    const numeric=Number(correct);
+    if(Number.isFinite(numeric)){
+      [numeric+2,Math.max(0,numeric-2),numeric+5,Math.max(0,numeric-5)].forEach(v=>{if(opts.length<4&&!opts.includes(String(v)))opts.push(String(v))});
+    }
+    ["දෙකම සමානයි","කියන්න බැහැ","ඉහත කිසිවක් නොවේ"].forEach(v=>{if(opts.length<4&&!opts.includes(v))opts.push(v)});
+    return {topic,type:"mcq",prompt,answer:correct,options:shuffle(opts.slice(0,4)),visual,hint,explain};
+  };
+  const numberQuestion=(topic,prompt,answer,visual="",hint="",explain="")=>({topic,type:"number",prompt,answer:String(answer),visual,hint,explain});
+
+  function emojiGroups(emoji,groups,size){return `<div>${Array.from({length:groups},()=>`<span class="group-box">${emoji.repeat(size)}</span>`).join("")}</div>`}
+  function placeValueVisual(tens,ones,hundreds=0){
+    return `<div class="place-value">${hundreds?`<div title="සියයේ ඒවා" style="display:grid;grid-template-columns:repeat(${Math.min(hundreds,2)},70px);gap:8px">${Array.from({length:hundreds},()=>'<div style="width:70px;height:70px;background:repeating-linear-gradient(0deg,#ffe66d 0 7px,#d19c00 7px 8px),repeating-linear-gradient(90deg,transparent 0 7px,#d19c00 7px 8px);border:2px solid #bd8700"></div>').join("")}</div>`:""}<div class="rods">${'<span class="rod"></span>'.repeat(tens)}</div><div class="ones">${'<span class="one"></span>'.repeat(ones)}</div></div>`
+  }
+  function clockSVG(hour){
+    const ang=hour%12*30, x=85+42*Math.sin(ang*Math.PI/180), y=85-42*Math.cos(ang*Math.PI/180);
+    return `<svg class="clock" viewBox="0 0 170 170" role="img" aria-label="වේලාව ${hour}"><circle cx="85" cy="85" r="76" fill="#fff" stroke="#4d5873" stroke-width="6"/><g font-size="15" font-weight="900" text-anchor="middle" fill="#445">${Array.from({length:12},(_,i)=>{const n=i+1,a=n*30*Math.PI/180;return `<text x="${85+59*Math.sin(a)}" y="${90-59*Math.cos(a)}">${n}</text>`}).join("")}</g><line x1="85" y1="85" x2="85" y2="29" stroke="#20283b" stroke-width="6" stroke-linecap="round"/><line x1="85" y1="85" x2="${x}" y2="${y}" stroke="#20283b" stroke-width="8" stroke-linecap="round"/><circle cx="85" cy="85" r="7" fill="#ef476f"/></svg>`
+  }
+  function shapeSVG(shape,color="#49b96f"){
+    const shapes={square:'<rect x="30" y="15" width="90" height="90" rx="3"/>',rectangle:'<rect x="15" y="30" width="120" height="65" rx="3"/>',circle:'<circle cx="75" cy="60" r="48"/>',triangle:'<polygon points="75,8 135,108 15,108"/>',cube:'<path d="M35 30 L88 15 L125 38 L72 54 Z M35 30 L35 88 L72 110 L72 54 Z M72 54 L125 38 L125 94 L72 110 Z"/>',cuboid:'<path d="M20 40 L95 23 L135 43 L60 61 Z M20 40 L20 91 L60 111 L60 61 Z M60 61 L135 43 L135 94 L60 111 Z"/>',cylinder:'<ellipse cx="75" cy="25" rx="42" ry="16"/><path d="M33 25 V92 C33 110 117 110 117 92 V25" fill-opacity=".75"/><ellipse cx="75" cy="92" rx="42" ry="16" fill-opacity=".7"/>',sphere:'<circle cx="75" cy="60" r="48"/><ellipse cx="60" cy="42" rx="16" ry="10" fill="#fff" opacity=".5"/>',prism:'<path d="M22 98 L55 23 L87 98 Z M55 23 L112 38 L140 104 L87 98 Z M87 98 L140 104 L112 38"/>'};
+    return `<svg class="shape-svg" viewBox="0 0 150 120"><g fill="${color}" stroke="#39445f" stroke-width="3" stroke-linejoin="round">${shapes[shape]}</g></svg>`
+  }
+
+  const generators = {
+    1:[
+      ()=>{const step=pick([2,5,10]),start=step*rand(1,4),seq=[start,start+step,start+2*step];return optionQuestion(1,`${seq.join(", ")}, ___`,start+3*step,[start+2*step+1,start+4*step,start+3*step-1],`<div style="font-size:42px;font-weight:1000">${seq.join(" → ")} → ?</div>`,`සෑම වරම ${step}ක් එකතු කරන්න.`,`${seq[2]}ට ${step}ක් එකතු කළ විට ${start+3*step}යි.`)},
+      ()=>{const size=pick([2,5,10]),groups=rand(2,size===10?5:7),total=size*groups;return numberQuestion(1,`එක් කණ්ඩායමක ${size} බැගින් ඇත. මුළු ගණන කීයද?`,total,emojiGroups(pick(["🌼","🥭","👟"]),groups,size),`${size} බැගින් ${groups} වරක් ගණන් කරන්න.`,`${groups} × ${size} = ${total}`)}
+    ],
+    2:[
+      ()=>{const n=rand(2,99),dir=pick(["පෙර","පසු"]),ans=dir==="පෙර"?n-1:n+1;return optionQuestion(2,`${n} ට ${dir} සංඛ්‍යාව කුමක්ද?`,ans,[ans-1,ans+1,n],`<div style="font-size:70px;font-weight:1000">${n}</div>`,dir==="පෙර"?"එකක් අඩු කරන්න.":"එකක් එකතු කරන්න.",`${n} ට ${dir} සංඛ්‍යාව ${ans}යි.`)},
+      ()=>{const tens=rand(1,9),ones=rand(0,9),ans=tens*10+ones;return numberQuestion(2,`දහයේ ඒවා ${tens}යි. එකේ ඒවා ${ones}යි. සංඛ්‍යාව ලියන්න.`,ans,placeValueVisual(tens,ones),"දහයේ ගණනට 10න් ගුණ කර එකේ ගණන එකතු කරන්න.",`${tens} × 10 + ${ones} = ${ans}`)},
+      ()=>{let a=rand(10,99),b=rand(10,99);while(a===b)b=rand(10,99);return optionQuestion(2,"විශාලම සංඛ්‍යාව තෝරන්න.",Math.max(a,b),[Math.min(a,b),Math.max(a,b)-1,Math.min(a,b)+1],`<div class="compare-grid"><span>${a}</span><span>?</span><span>${b}</span></div>`,`පළමුව දහයේ ඉලක්කම සසඳන්න.`,`විශාල සංඛ්‍යාව ${Math.max(a,b)}යි.`)}
+    ],
+    3:[
+      ()=>{let a1=rand(0,7),b1=rand(0,9-a1),a=rand(1,7)*10+a1,b=rand(1,8-Math.floor(a/10))*10+b1;return numberQuestion(3,`${a} + ${b} = ?`,a+b,placeValueVisual(Math.floor(a/10),a%10)+`<div style="font-size:42px;font-weight:1000">+</div>`+placeValueVisual(Math.floor(b/10),b%10),"එකේ ඒවාත් දහයේ ඒවාත් වෙන වෙනම එකතු කරන්න.",`${a} + ${b} = ${a+b}`)},
+      ()=>{const total=rand(30,90),a=rand(10,total-10),b=total-a;return optionQuestion(3,`${a} + ___ = ${total}`,b,[b+1,b-1,a],`<div style="font-size:54px;font-weight:1000">${a} + 🟨 = ${total}</div>`,`මුළු ගණනෙන් ${a} අඩු කරන්න.`,`${total} − ${a} = ${b}`)}
+    ],
+    4:[
+      ()=>optionQuestion(4,"දිග මැනීමේ සම්මත ඒකකය කුමක්ද?","මීටරය",["ලීටරය","රුපියල","පැය"],`<div style="font-size:86px">📏</div>`,"දිග මැනීමට භාවිත කරන ඒකකය සිතන්න.","දිග මැනීමේ සම්මත ඒකකය මීටරයයි."),
+      ()=>{const count=rand(4,9);return numberQuestion(4,"මේසයේ දිග පැන්සල් කීයකට සමානද?",count,`<div style="width:min(560px,90%);height:34px;background:#9b6b43;border-radius:8px;margin-bottom:10px"></div><div style="font-size:42px;letter-spacing:-8px">${"✏️".repeat(count)}</div>`,`පැන්සල් එකින් එක ගණන් කරන්න.`,`මිනුම් වාර ගණන ${count}යි.`)},
+      ()=>{let a=rand(2,8),b=rand(2,8);while(a===b)b=rand(2,8);return optionQuestion(4,"දිග වැඩි රිබන් පටිය තෝරන්න.",a>b?"A":"B",[a>b?"B":"A","දෙකම සමානයි","කියන්න බැහැ"],`<div style="width:100%"><div style="display:flex;align-items:center;gap:8px;margin:14px"><b>A</b><span style="height:24px;width:${a*9}%;max-width:560px;background:#ff7aa2;border-radius:999px"></span></div><div style="display:flex;align-items:center;gap:8px;margin:14px"><b>B</b><span style="height:24px;width:${b*9}%;max-width:560px;background:#4cc9f0;border-radius:999px"></span></div></div>`,`දිගු පටිය අවසානය තවත් දුරට යයි.`,`${a>b?"A":"B"} පටිය දිග වැඩියි.`)}
+    ],
+    5:[
+      ()=>{const a=rand(10,18),b=rand(1,Math.min(9,a));return numberQuestion(5,`${a} − ${b} = ?`,a-b,emojiGroups("⭐",a,1),`${b}ක් ඉවත් කර ඉතිරිය ගණන් කරන්න.`,`${a} − ${b} = ${a-b}`)},
+      ()=>{const a=rand(7,18),ans=rand(1,a-1),b=a-ans;return optionQuestion(5,`${a} − ___ = ${ans}`,b,[b+1,Math.max(0,b-1),ans],`<div style="font-size:56px;font-weight:1000">${a} − 🟩 = ${ans}</div>`,`ඉවත් කළ ගණන සෙවීමට ${a}යෙන් ${ans} අඩු කරන්න.`,`${a} − ${ans} = ${b}`)}
+    ],
+    6:[
+      ()=>{const days=["සඳුදා","අඟහරුවාදා","බදාදා","බ්‍රහස්පතින්දා","සිකුරාදා","සෙනසුරාදා","ඉරිදා"],i=rand(0,5);return optionQuestion(6,`${days[i]}ට පසු දවස කුමක්ද?`,days[i+1],shuffle(days.filter((_,j)=>j!==i+1)).slice(0,3),`<div style="font-size:72px">📅</div>`,`සතියේ දින පිළිවෙළ මතක් කරන්න.`,`${days[i]}ට පසු ${days[i+1]}යි.`)},
+      ()=>{const months=["ජනවාරි","පෙබරවාරි","මාර්තු","අප්‍රේල්","මැයි","ජූනි","ජූලි","අගෝස්තු","සැප්තැම්බර්","ඔක්තෝබර්","නොවැම්බර්","දෙසැම්බර්"],i=rand(0,10);return optionQuestion(6,`${months[i]} මාසයට පසු මාසය කුමක්ද?`,months[i+1],shuffle(months.filter((_,j)=>j!==i+1)).slice(0,3),`<div style="font-size:70px">🗓️</div>`,`මාස දොළහේ පිළිවෙළ සිතන්න.`,`${months[i]}ට පසු ${months[i+1]}යි.`)},
+      ()=>{const h=rand(1,12);return optionQuestion(6,"ඔරලෝසුවේ වේලාව කීයද?",h,[h%12+1,(h+10)%12+1,(h+1)%12+1],clockSVG(h),"දිගු කටුව 12ට ඇති නිසා සම්පූර්ණ පැයකි. කෙටි කටුව බලන්න.",`වේලාව ${h}යි.`)}
+    ],
+    7:[
+      ()=>{const n=rand(1,10);return numberQuestion(7,`${n} × 2 = ?`,n*2,emojiGroups("🐰",n,2),"කණ්ඩායම් ගණනට දෙක බැගින් එකතු කරන්න.",`${n} × 2 = ${n*2}`)},
+      ()=>{const n=rand(2,8);return optionQuestion(7,`${"2 + ".repeat(n-1)}2 = ?`,n*2,[n*2-2,n*2+2,n],`<div style="font-size:52px">${"👂👂 ".repeat(n)}</div>`,`2 බැගින් ${n} වරක් ගණන් කරන්න.`,`${n} × 2 = ${n*2}`)}
+    ],
+    8:[
+      ()=>{const names={square:"සමචතුරස්‍රය",rectangle:"සෘජුකෝණාස්‍රය",circle:"වෘත්තය",triangle:"ත්‍රිකෝණය"},shape=pick(Object.keys(names));return optionQuestion(8,"හැඩයේ නම තෝරන්න.",names[shape],Object.values(names).filter(x=>x!==names[shape]).slice(0,3),shapeSVG(shape),"පැති සහ වක්‍ර රේඛා ගණන් කරන්න.",`මෙය ${names[shape]}කි.`)},
+      ()=>{const items=[{s:"cube",n:"ඝනකය",f:"සමචතුරස්‍රය"},{s:"cuboid",n:"ඝනකාභය",f:"සෘජුකෝණාස්‍රය"},{s:"cylinder",n:"සිලින්ඩරය",f:"වෘත්තය"},{s:"prism",n:"ත්‍රිකෝණාකාර ප්‍රිස්මය",f:"ත්‍රිකෝණය"}],it=pick(items);return optionQuestion(8,`${it.n} හි පෙන්වා ඇති මුහුණේ හැඩය කුමක්ද?`,it.f,["වෘත්තය","සමචතුරස්‍රය","සෘජුකෝණාස්‍රය","ත්‍රිකෝණය"].filter(x=>x!==it.f).slice(0,3),shapeSVG(it.s),"ඝන වස්තුවේ පැතලි මුහුණ සිතන්න.",`${it.n} හි එම මුහුණ ${it.f}කි.`)},
+      ()=>{const items=[{s:"sphere",n:"ගෝලය",roll:"පහසුවෙන් පෙරළේ"},{s:"cube",n:"ඝනකය",roll:"පහසුවෙන් පෙරළෙන්නේ නැහැ"},{s:"cylinder",n:"සිලින්ඩරය",roll:"එක් දිශාවකට පෙරළේ"}],it=pick(items);return optionQuestion(8,`${it.n} ගැන නිවැරදි වාක්‍යය තෝරන්න.`,it.roll,items.map(x=>x.roll).filter(x=>x!==it.roll).concat("මුහුණු නැහැ").slice(0,3),shapeSVG(it.s),"වක්‍ර මතුපිටක් තිබේද බලන්න.",`${it.n} ${it.roll}.`)}
+    ],
+    9:[
+      ()=>{const total=rand(2,10)*2;return optionQuestion(9,`${total}ක් ළමයි දෙදෙනෙකුට සම සමව බෙදුවොත් එක් අයෙකුට කීයක් ලැබේද?`,total/2,[total/2-1,total/2+1,total],`<div class="emoji-row">${"🍊".repeat(total)}</div><div style="font-size:50px">🧒🏻 &nbsp; 🧒🏽</div>`,`එකක් එක් අයෙකුට මාරුවෙන් මාරුවට දෙන්න.`,`${total} ÷ 2 = ${total/2}`)},
+      ()=>{const total=pick([5,7,9,11,13,15,17,19]);return optionQuestion(9,`${total}ක් දෙදෙනෙකුට සමව බෙදූ විට ඉතිරි ගණන කීයද?`,1,[0,2,total/2],`<div class="emoji-row">${"📘".repeat(total)}</div>`,`ඔත්තේ සංඛ්‍යාවක් දෙකට බෙදූ විට එකක් ඉතිරි වේ.`,`එක් අයෙකුට ${Math.floor(total/2)} බැගින් ලැබී 1ක් ඉතිරි වේ.`)}
+    ],
+    10:[
+      ()=>{const kind=pick(["භාගය","කාල"]),parts=kind==="භාගය"?2:4,target=1;return {topic:10,type:"parts",prompt:`රූපයේ ${kind}ක් පාට කරන්න.`,answer:String(target),parts,target,visual:"",hint:`සමාන කොටස් ${parts}කින් එක කොටසක් තෝරන්න.`,explain:`${parts===2?"සමාන කොටස් දෙකෙන් එකක් භාගයකි.":"සමාන කොටස් හතරෙන් එකක් කාලකි."}`}},
+      ()=>{const parts=pick([2,4]),colored=1,ans=parts===2?"භාගය":"කාල";return optionQuestion(10,"පාට කළ කොටස කුමක්ද?",ans,[ans==="භාගය"?"කාල":"භාගය","සම්පූර්ණය","කොටස් තුනක්"],`<div class="parts">${Array.from({length:parts},(_,i)=>`<div class="part ${i<colored?"on":""}"></div>`).join("")}</div>`,`සම්පූර්ණය සමාන කොටස් කීයකට බෙදා තිබේද බලන්න.`,`${parts===2?"කොටස් දෙකෙන් එකක් භාගයකි.":"කොටස් හතරෙන් එකක් කාලකි."}`)}
+    ],
+    11:[
+      ()=>{const side=pick(["වම්","දකුණු"]),obj=pick(["🌳","🚗","⚽","🌼"]);return optionQuestion(11,`ළමයාගේ ${side} අත පැත්තේ ඇති දේ තෝරන්න.`,obj,["🏠","🐕","🚌"],`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:90%;font-size:70px"><div>${side==="වම්"?obj:"🏠"}</div><div>🧒</div><div>${side==="දකුණු"?obj:"🏠"}</div></div>`,`ළමයා ඉදිරියට බලා සිටින ලෙස සිතන්න.`,`${obj} ${side} අත පැත්තේ ඇත.`)},
+      ()=>{const turn=pick(["වමට","දකුණට"]);return optionQuestion(11,`ඉදිරියට ගොස් ${turn} හැරුණා. ඊළඟට යන දිශාව තෝරන්න.`,turn,[turn==="වමට"?"දකුණට":"වමට","පසුපසට","ඉහළට"],`<div style="font-size:85px">⬆️ <span style="font-size:46px">${turn==="වමට"?"↰":"↱"}</span></div>`,`හැරෙන පැත්තේ අත මතක් කරන්න.`,`${turn} හැරිය යුතුය.`)}
+    ],
+    13:[
+      ()=>{const n=rand(102,199),dir=pick(["පෙර","පසු"]),ans=dir==="පෙර"?n-1:n+1;return optionQuestion(13,`${n} ට ${dir} සංඛ්‍යාව කුමක්ද?`,ans,[ans-1,ans+1,n],`<div style="font-size:70px;font-weight:1000">${n}</div>`,dir==="පෙර"?"එකක් අඩු කරන්න.":"එකක් එකතු කරන්න.",`${n} ට ${dir} සංඛ්‍යාව ${ans}යි.`)},
+      ()=>{const n=rand(101,199),h=1,t=Math.floor((n%100)/10),o=n%10;return numberQuestion(13,`සියයේ ඒවා ${h}, දහයේ ඒවා ${t}, එකේ ඒවා ${o}. සංඛ්‍යාව ලියන්න.`,n,placeValueVisual(t,o,h),"100 + දහයේ වටිනාකම + එකේ වටිනාකම එකතු කරන්න.",`100 + ${t*10} + ${o} = ${n}`)},
+      ()=>{let a=rand(101,200),b=rand(101,200);while(a===b)b=rand(101,200);return optionQuestion(13,"කුඩාම සංඛ්‍යාව තෝරන්න.",Math.min(a,b),[Math.max(a,b),Math.min(a,b)+1,Math.max(a,b)-1],`<div class="compare-grid"><span>${a}</span><span>?</span><span>${b}</span></div>`,`සියයේ ඉලක්කම සමාන නම් දහයේ ඉලක්කම බලන්න.`,`කුඩා සංඛ්‍යාව ${Math.min(a,b)}යි.`)}
+    ],
+    14:[
+      ()=>{const target=pick([12,15,18,20,25,30,35,40,45,50,60,70,80,90]);return {topic:14,type:"money",prompt:`රු. ${target} සෑදීමට මුදල් තෝරන්න.`,answer:String(target),target,visual:`<div style="font-size:70px">🛒</div>`,hint:"තෝරාගත් මුදල් එකතුව ඉලක්කයට සමාන කළ යුතුය.",explain:`තෝරාගත් මුදල් එකතුව රු. ${target}යි.`}},
+      ()=>{let a=pick([10,20,25,30,40,50]),b=pick([10,20,25,30,40,50]);while(a===b)b=pick([10,20,25,30,40,50]);return optionQuestion(14,"වැඩි මුදල් ප්‍රමාණය තෝරන්න.",`රු. ${Math.max(a,b)}`,[`රු. ${Math.min(a,b)}`,`රු. ${Math.max(a,b)+5}`,"දෙකම සමානයි"],`<div class="compare-grid"><span>රු. ${a}</span><span>?</span><span>රු. ${b}</span></div>`,`සංඛ්‍යා දෙක සසඳන්න.`,`රු. ${Math.max(a,b)} වැඩියි.`)},
+      ()=>{const price=pick([12,15,18,22,25,30,35,40]),paid=pick([50,100]),ans=paid-price;return numberQuestion(14,`රු. ${price}ක භාණ්ඩයකට රු. ${paid}ක් දුන්නා. ඉතිරි මුදල කීයද?`,ans,`<div style="font-size:64px">🏷️ රු. ${price} &nbsp; 💵 රු. ${paid}</div>`,`දුන් මුදලෙන් මිල අඩු කරන්න.`,`${paid} − ${price} = ${ans}`)}
+    ],
+    15:[
+      ()=>{const step=pick([2,3,5,10]),start=rand(1,10),seq=[start,start+step,start+2*step,start+3*step],ans=start+4*step;return optionQuestion(15,`${seq.join(", ")}, ___`,ans,[ans-step,ans+step,ans+1],`<div style="font-size:42px;font-weight:1000">${seq.join(" → ")} → ?</div>`,`එක් සංඛ්‍යාවකින් ඊළඟට යන වෙනස සොයන්න.`,`${seq[3]}ට ${step}ක් එකතු කළ විට ${ans}යි.`)},
+      ()=>{const patterns=[["🔴","🔵"],["▲","■","■"],["🍎","🍌","🍇"]],p=pick(patterns),len=rand(5,8),arr=Array.from({length:len},(_,i)=>p[i%p.length]),ans=p[len%p.length];return optionQuestion(15,"රටාවේ ඊළඟ රූපය කුමක්ද?",ans,shuffle(["🔴","🔵","▲","■","🍎","🍌","🍇"].filter(x=>x!==ans)).slice(0,3),`<div class="emoji-row">${arr.join("")} ❓</div>`,`නැවත නැවත එන කුඩා කොටස හඳුනාගන්න.`,`ඊළඟ රූපය ${ans}යි.`)}
+    ],
+    16:[
+      ()=>{let a,b;do{a=rand(15,69);b=rand(12,99-a)}while(a%10+b%10<10);return numberQuestion(16,`${a} + ${b} = ?`,a+b,`<div style="font-size:58px;font-weight:1000;line-height:1.2;text-align:right"><div>${a}</div><div>+ ${b}</div><hr><div>?</div></div>`,`එකේ ඒවා එකතු කර 10ක් වූ විට දහයක් ලෙස මාරු කරන්න.`,`${a%10} + ${b%10} = ${a%10+b%10}; එක දහයක් මාරු කර මුළු එකතුව ${a+b}යි.`)},
+      ()=>{const a=pick([25,36,47,58,69]),b=pick([17,28,39]),ans=a+b;return optionQuestion(16,`${a} + ${b} = ?`,ans,[ans-10,ans+10,ans-1],placeValueVisual(Math.floor(a/10),a%10)+`<div style="font-size:42px">➕</div>`+placeValueVisual(Math.floor(b/10),b%10),"එකේ ඒවා 10 හෝ වැඩි නම් දහයක් මාරු කරන්න.",`${a} + ${b} = ${ans}`)}
+    ],
+    17:[
+      ()=>{let ah=rand(90,150),bh=rand(90,150);while(ah===bh)bh=rand(90,150);return optionQuestion(17,"වැඩි ධාරිතාව ඇති බහාලුම තෝරන්න.",ah>bh?"A":"B",[ah>bh?"B":"A","දෙකම සමානයි","කියන්න බැහැ"],`<div class="capacity-icons"><div><div class="container-icon" style="--h:${ah}px;--fill:70%">A</div></div><div><div class="container-icon" style="--h:${bh}px;--fill:70%">B</div></div></div>`,`වැඩි දියර ප්‍රමාණයක් රඳවා ගත හැකි බහාලුම බලන්න.`,`${ah>bh?"A":"B"} බහාලුමේ ධාරිතාව වැඩියි.`)},
+      ()=>optionQuestion(17,"දියර පරිමාව මැනීමට භාවිත කරන ඒකකය කුමක්ද?","ලීටරය",["මීටරය","රුපියල","පැය"],`<div style="font-size:90px">🧴💧</div>`,`බෝතලයක හෝ ජල භාජනයක පරිමාව සිතන්න.`,"දියර පරිමාව මැනීමට ලීටරය භාවිත කරයි."),
+      ()=>{const containers=[{e:"🥄",n:"හැන්ද"},{e:"🪣",n:"බාල්දිය"},{e:"🫙",n:"බෝතලය"},{e:"🥤",n:"කෝප්පය"}];return optionQuestion(17,"අඩුම ධාරිතාව ඇති බහාලුම තෝරන්න.","හැන්ද",["බාල්දිය","බෝතලය","කෝප්පය"],`<div class="emoji-row">${containers.map(x=>`<span title="${x.n}">${x.e}</span>`).join("")}</div>`,`ඉතා කුඩා දියර ප්‍රමාණයක් පමණක් රඳවන දේ සොයන්න.`,"හැන්දේ ධාරිතාව අඩුමයි.")}
+    ],
+    18:[
+      ()=>{let a,b;do{a=rand(21,99);b=rand(11,a-1)}while(a%10>=b%10);return numberQuestion(18,`${a} − ${b} = ?`,a-b,`<div style="font-size:58px;font-weight:1000;line-height:1.2;text-align:right"><div>${a}</div><div>− ${b}</div><hr><div>?</div></div>`,`එකේ ඉලක්කමෙන් අඩු කළ නොහැකි නම් දහයක් ණයට ගන්න.`,`${a} − ${b} = ${a-b}`)},
+      ()=>{const a=pick([42,53,64,75,86,97]),b=pick([18,29,37,48]),ans=a-b;if(ans<0)return generators[18][0]();return optionQuestion(18,`${a} − ${b} = ?`,ans,[ans+10,ans-10,Math.abs((a%10)-(b%10))+Math.abs(Math.floor(a/10)-Math.floor(b/10))*10],placeValueVisual(Math.floor(a/10),a%10),"එකේ ඒවා සඳහා දහයක් ණයට ගැනීමට සිදුවේද බලන්න.",`${a} − ${b} = ${ans}`)}
+    ]
+  };
+  generators[12]=[()=>generateForTopic(rand(1,11))];
+
+  function generateForTopic(id){
+    const list=generators[id]||generators[rand(1,18)];
+    let idx=rand(0,list.length-1), key=`${id}-${idx}`;
+    if(key===state.lastGen && list.length>1){idx=(idx+1)%list.length;key=`${id}-${idx}`}
+    state.lastGen=key;
+    const q=list[idx](); q.topic=q.topic||id; return q;
+  }
+  function generateQuestion(){
+    if(state.mode==="topic") return generateForTopic(state.topicId);
+    if(state.mode==="quick") return generateForTopic(rand(1,18));
+    const weighted=[1,2,3,5,6,7,8,9,10,11,13,14,15,16,17,18];
+    return generateForTopic(pick(weighted));
+  }
+
+  function startQuiz(topicId=null,count=10,mode="mixed"){
+    state={topicId,count,index:0,score:0,streak:0,questions:[],current:null,attempts:0,firstTry:true,lastGen:"",selected:[],number:"",mode};
+    showView("quiz"); nextQuestion();
+  }
+  function nextQuestion(){
+    if(state.index>=state.count){finishQuiz();return}
+    state.current=generateQuestion(); state.attempts=0; state.firstTry=true; state.selected=[]; state.number="";
+    renderQuestion();
+  }
+  function renderQuestion(){
+    const q=state.current,t=topicData.find(x=>x.id===q.topic);
+    $("#counter").textContent=`${state.index+1} / ${state.count}`;
+    $("#progressBar").style.width=`${state.index/state.count*100}%`;
+    $("#topicPill").innerHTML=`<span>${t.icon}</span> ${t.title}`;
+    $("#scorePill").textContent=`⭐ ${state.score}`;
+    $("#questionText").textContent=q.prompt;
+    $("#visual").innerHTML=q.visual||defaultVisual(q);
+    const feedback=$("#feedback");feedback.className="feedback hidden";feedback.innerHTML="";feedback.dataset.locked="0";
+    $("#hintBox").classList.add("hidden");$("#hintBox").textContent=q.hint||"පියවරෙන් පියවර සිතන්න.";
+    $("#hintBtn").disabled=false;
+    renderAnswerArea(q);
+  }
+  function defaultVisual(q){
+    if(q.type==="parts")return `<div class="parts">${Array.from({length:q.parts},()=>'<button class="part" aria-label="කොටස"></button>').join("")}</div>`;
+    return `<div style="font-size:80px">🤔</div>`;
+  }
+  function renderAnswerArea(q){
+    const area=$("#answerArea");
+    if(q.type==="mcq"){
+      area.innerHTML=`<div class="options">${q.options.map(o=>`<button class="answer-btn" data-answer="${escapeAttr(o)}">${o}</button>`).join("")}</div><div style="text-align:center;margin-top:15px"><button id="submitAnswerBtn" class="primary-btn">පිළිතුර යොමු කරන්න</button></div>`;
+      let selectedAnswer="";
+      area.querySelectorAll("[data-answer]").forEach(b=>b.addEventListener("click",()=>{
+        area.querySelectorAll(".answer-btn").forEach(x=>x.classList.remove("selected"));
+        b.classList.add("selected");
+        selectedAnswer=b.dataset.answer;
+      }));
+      $("#submitAnswerBtn").addEventListener("click",()=>submitAnswer(selectedAnswer));
+      
+    } else if(q.type==="number"){
+      area.innerHTML=`<div class="number-panel"><div id="numberDisplay" class="number-display" aria-label="පිළිතුර">?</div><div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-key="${n}">${n}</button>`).join("")}<button class="key action" data-key="back">⌫</button><button class="key" data-key="0">0</button><button class="key check" data-key="check">✓</button></div></div>`;
+      area.querySelectorAll("[data-key]").forEach(b=>b.addEventListener("click",()=>keyPress(b.dataset.key)));
+    } else if(q.type==="parts"){
+      area.innerHTML=`<div style="text-align:center"><button id="partsCheck" class="primary-btn" style="margin-top:14px">පරීක්ෂා කරන්න</button></div>`;
+      $("#visual").querySelectorAll(".part").forEach(p=>p.addEventListener("click",()=>p.classList.toggle("on")));
+      $("#partsCheck").addEventListener("click",()=>submitAnswer(String($("#visual").querySelectorAll(".part.on").length)));
+    } else if(q.type==="money"){
+      const pieces=[1,2,5,10,20,50,100];
+      area.innerHTML=`<div class="money-board"><div class="money-target">ඉලක්කය: රු. ${q.target}</div><div id="moneyTotal" class="money-total">තෝරා ඇත: රු. 0</div><div class="money-pieces">${pieces.map(v=>`<button class="money ${v>=20?"note":""}" data-money="${v}">රු. ${v}</button>`).join("")}</div><div style="display:flex;justify-content:center;gap:10px"><button id="moneyReset" class="soft-btn">මකන්න</button><button id="moneyCheck" class="primary-btn">පරීක්ෂා කරන්න</button></div></div>`;
+      area.querySelectorAll("[data-money]").forEach(b=>b.addEventListener("click",()=>{state.selected.push(Number(b.dataset.money));b.classList.add("selected");setTimeout(()=>b.classList.remove("selected"),180);$("#moneyTotal").textContent=`තෝරා ඇත: රු. ${state.selected.reduce((a,b)=>a+b,0)}`}));
+      $("#moneyReset").addEventListener("click",()=>{state.selected=[];$("#moneyTotal").textContent="තෝරා ඇත: රු. 0"});
+      $("#moneyCheck").addEventListener("click",()=>submitAnswer(String(state.selected.reduce((a,b)=>a+b,0))));
+    }
+  }
+  function escapeAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
+  function keyPress(k){
+    if(k==="back")state.number=state.number.slice(0,-1);else if(k==="check"){if(state.number!=="")submitAnswer(state.number);return}else if(state.number.length<3)state.number+=k;
+    $("#numberDisplay").textContent=state.number||"?";
+  }
+  function submitAnswer(value,button=null){
+    const q=state.current;
+    const correct=String(value)===String(q.answer);
+    state.attempts++;
+
+    if(correct){
+      sound("good");
+      state.streak++;
+      state.score+=state.firstTry?10:6;
+      recordResult(q.topic,state.firstTry);
+      markChoices(button,true,q.answer);
+      showFeedback(true,q.explain||"හොඳයි! නිවැරදි පිළිතුරක්.");
+      confetti();
+      setTimeout(()=>{
+        state.index++;
+        nextQuestion();
+      },1800);
+    }else{
+      sound("bad");
+      state.streak=0;
+      state.firstTry=false;
+
+      if(state.attempts===1){
+        showRetry();
+        speakSinhala("නැවත උත්සාහ කරන්න");
+        setTimeout(()=>{
+          resetForReattempt();
+        },1200);
+      }else{
+        recordResult(q.topic,false);
+        showFeedback(false,`නිවැරදි පිළිතුර: ${q.answer}`);
+        setTimeout(()=>{
+          state.index++;
+          nextQuestion();
+        },1800);
+      }
+    }
+
+    progress.bestStreak=Math.max(progress.bestStreak||0,state.streak);
+    saveProgress();
+    $("#scorePill").textContent=`⭐ ${state.score}`;
+  }
+
+  function resetForReattempt(){
+    state.selected=[];
+    state.number="";
+    document.querySelectorAll(".answer-btn").forEach(b=>{
+      b.classList.remove("selected","wrong","correct","dim");
+      b.disabled=false;
+    });
+
+    const display=$("#numberDisplay");
+    if(display) display.textContent="?";
+
+    document.querySelectorAll(".part").forEach(p=>p.classList.remove("on"));
+    const feedback=$("#feedback");
+    feedback.className="feedback hidden";
+    feedback.innerHTML="";
+  }
+
+  function markChoices(button,correct,answer,reveal=true){
+    document.querySelectorAll(".answer-btn").forEach(b=>{if(reveal&&b.dataset.answer===String(answer))b.classList.add("correct");else if(reveal)b.classList.add("dim")});
+    if(button)button.classList.add(correct?"correct":"wrong");
+  }
+  function showRetry(){
+    const f=$("#feedback");f.dataset.locked="0";f.className="feedback bad";f.innerHTML=`<span>🌱 තව වරක් බලමු! ඉඟිය භාවිත කළ හැක.</span>`;
+  }
+  function showFeedback(good,text){
+    const f=$("#feedback");f.dataset.locked="1";f.className=`feedback ${good?"good":"bad"}`;f.innerHTML=`<span>${good?"🎉":"🧩"} ${text}</span><button class="next">ඊළඟ ප්‍රශ්නය →</button>`;
+    f.querySelector(".next").addEventListener("click",()=>{state.index++;nextQuestion()});
+    document.querySelectorAll("#answerArea button,#visual button").forEach(b=>b.disabled=true);
+  }
+  function recordResult(topicId,correct){
+    progress.total++;if(correct)progress.correct++;progress.stars+=(correct?1:0);
+    const s=progress.topics[topicId]||{total:0,correct:0,stars:0};s.total++;if(correct)s.correct++;if(correct)s.stars++;progress.topics[topicId]=s;
+  }
+  function shakeCard(){const c=document.querySelector(".quiz-card");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake")}
+  let drumTimer=null;
+  function startDrum(){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext;
+      const ctx=new C();
+      drumTimer=setInterval(()=>{
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type="sine";
+        osc.frequency.value=90;
+        gain.gain.setValueAtTime(.04,ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime+.2);
+      },900);
+    }catch{}
+  }
+
+  function sound(type){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext,ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=type==="good"?660:180;
+      g.gain.setValueAtTime(.12,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.25);
+      o.start();
+      o.stop(ctx.currentTime+.25);
+    }catch{}
+  }
+  function confetti(){
+    const layer=$("#confetti");
+    layer.innerHTML="";
+    const emojis=["🎉","🎊","⭐","🌟","✨","🥳","👏","🏆"];
+    for(let i=0;i<35;i++){
+      const e=document.createElement("span");
+      e.textContent=pick(emojis);
+      e.style.position="fixed";
+      e.style.left=rand(5,95)+"vw";
+      e.style.bottom="-50px";
+      e.style.fontSize=rand(25,50)+"px";
+      e.style.zIndex="9999";
+      layer.appendChild(e);
+      e.animate([
+        {transform:"translateY(0) rotate(0)",opacity:0},
+        {opacity:1},
+        {transform:"translateY(-100vh) rotate(720deg)",opacity:0}
+      ],{duration:2000+rand(0,1000),fill:"forwards"});
+    }
+    setTimeout(()=>layer.innerHTML="",3500);
+  }
+  function finishQuiz(){
+    $("#progressBar").style.width="100%";showView("summary");const pct=Math.round(state.score/(state.count*10)*100);
+    $("#summaryTrophy").textContent=pct>=85?"🏆":pct>=60?"🌟":"🌱";
+    $("#summaryTitle").textContent=pct>=85?"හරිම අපූරුයි!":pct>=60?"හොඳ වැඩක්!":"අපි තව ටිකක් පුහුණු වෙමු!";
+    $("#summaryText").textContent=`ප්‍රශ්න ${state.count}කින් ලකුණු ${state.score}. ඔබ ${progress.stars} තරු එකතු කර ඇත.`;
+  }
+  function renderReport(){
+    const rows=topicData.map(t=>{const s=topicStats(t.id),pct=s.total?Math.round(s.correct/s.total*100):0;return `<tr><td>${t.icon} ${t.id}. ${t.title}</td><td>${s.total}</td><td>${s.correct}</td><td>${pct}%</td></tr>`}).join("");
+    $("#reportContent").innerHTML=`<table class="report-table"><thead><tr><th>පාඩම</th><th>ප්‍රශ්න</th><th>පළමු වර නිවැරදි</th><th>ප්‍රතිශතය</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  
+function speakSinhala(message){
+    if(!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(message);
+    u.lang="si-LK";
+    u.rate=.85;
+    speechSynthesis.speak(u);
+}
+
+function speakCurrent(){
+    if(!("speechSynthesis" in window))return alert("මෙම බ්‍රවුසරයේ හඬ කියවීම නොමැත.");
+    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(state.current?.prompt||"");u.lang="si-LK";u.rate=.85;const vs=speechSynthesis.getVoices(),si=vs.find(v=>v.lang?.toLowerCase().startsWith("si"));if(si)u.voice=si;speechSynthesis.speak(u);
+  }
+
+  $("#adventureBtn").addEventListener("click",()=>{startDrum();startQuiz(null,10,"mixed")});
+  $("#quickBtn").addEventListener("click",()=>{startDrum();startQuiz(null,5,"quick")});
+  $("#quitBtn").addEventListener("click",()=>{if(confirm("ප්‍රශ්නාවලියෙන් ඉවත් වන්නද?"))showView("home")});
+  $("#hintBtn").addEventListener("click",()=>{$("#hintBox").classList.remove("hidden");$("#hintBtn").disabled=true});
+  $("#speakBtn").addEventListener("click",speakCurrent);
+  $("#againBtn").addEventListener("click",()=>startQuiz(state.topicId,state.count,state.mode));
+  $("#homeBtn").addEventListener("click",()=>showView("home"));
+  $("#reportBtn").addEventListener("click",()=>{renderReport();showView("report")});
+  $("#closeReportBtn").addEventListener("click",()=>showView("home"));
+  $("#resetBtn").addEventListener("click",()=>{if(confirm("සියලු ප්‍රගති දත්ත මකා දැමිය යුතුද?")){progress=blankProgress();saveProgress();renderReport()}});
+  document.addEventListener("keydown",e=>{if(!views.quiz.classList.contains("hidden")&&/^[0-9]$/.test(e.key)&&state.current?.type==="number")keyPress(e.key);if(e.key==="Enter"&&state.current?.type==="number")keyPress("check")});
+
+  renderTopics();renderStats();
+})();
+</script>
+</body>
+</html>
