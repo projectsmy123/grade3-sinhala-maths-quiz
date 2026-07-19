@@ -360,7 +360,7 @@
     $("#scorePill").textContent=`⭐ ${state.score}`;
     $("#questionText").textContent=q.prompt;
     $("#visual").innerHTML=q.visual||defaultVisual(q);
-    $("#feedback").className="feedback hidden";$("#feedback").innerHTML="";
+    const feedback=$("#feedback");feedback.className="feedback hidden";feedback.innerHTML="";feedback.dataset.locked="0";
     $("#hintBox").classList.add("hidden");$("#hintBox").textContent=q.hint||"පියවරෙන් පියවර සිතන්න.";
     $("#hintBtn").disabled=false;
     renderAnswerArea(q);
@@ -372,8 +372,15 @@
   function renderAnswerArea(q){
     const area=$("#answerArea");
     if(q.type==="mcq"){
-      area.innerHTML=`<div class="options">${q.options.map(o=>`<button class="answer-btn" data-answer="${escapeAttr(o)}">${o}</button>`).join("")}</div>`;
-      area.querySelectorAll("[data-answer]").forEach(b=>b.addEventListener("click",()=>submitAnswer(b.dataset.answer,b)));
+      area.innerHTML=`<div class="options">${q.options.map(o=>`<button class="answer-btn" data-answer="${escapeAttr(o)}">${o}</button>`).join("")}</div><div style="text-align:center;margin-top:15px"><button id="submitAnswerBtn" class="primary-btn">පිළිතුර යොමු කරන්න</button></div>`;
+      let selectedAnswer="";
+      area.querySelectorAll("[data-answer]").forEach(b=>b.addEventListener("click",()=>{
+        area.querySelectorAll(".answer-btn").forEach(x=>x.classList.remove("selected"));
+        b.classList.add("selected");
+        selectedAnswer=b.dataset.answer;
+      }));
+      $("#submitAnswerBtn").addEventListener("click",()=>submitAnswer(selectedAnswer));
+      
     } else if(q.type==="number"){
       area.innerHTML=`<div class="number-panel"><div id="numberDisplay" class="number-display" aria-label="පිළිතුර">?</div><div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-key="${n}">${n}</button>`).join("")}<button class="key action" data-key="back">⌫</button><button class="key" data-key="0">0</button><button class="key check" data-key="check">✓</button></div></div>`;
       area.querySelectorAll("[data-key]").forEach(b=>b.addEventListener("click",()=>keyPress(b.dataset.key)));
@@ -401,7 +408,7 @@
       sound("good");state.streak++;state.score+=state.firstTry?10:6;recordResult(q.topic,state.firstTry);markChoices(button,true,q.answer);showFeedback(true,q.explain||"හොඳයි! නිවැරදි පිළිතුරක්.");confetti();
     }else{
       sound("bad");state.streak=0;shakeCard();
-      if(state.attempts<2){state.firstTry=false;markChoices(button,false,q.answer,false);showRetry();}
+      if(state.attempts<2){state.firstTry=false;markChoices(button,false,q.answer,false);showRetry(); speakSinhala("නැවත උත්සාහ කරන්න");}
       else{recordResult(q.topic,false);markChoices(button,false,q.answer,true);showFeedback(false,`නිවැරදි පිළිතුර: ${q.answer}. ${q.explain||"නැවත පියවරෙන් පියවර බලමු."}`)}
     }
     progress.bestStreak=Math.max(progress.bestStreak||0,state.streak);saveProgress();$("#scorePill").textContent=`⭐ ${state.score}`;
@@ -427,8 +434,25 @@
     try{const C=window.AudioContext||window.webkitAudioContext,ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=type==="good"?660:180;g.gain.setValueAtTime(.12,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.25);o.start();o.stop(ctx.currentTime+.25)}catch{}
   }
   function confetti(){
-    const c=$("#confetti"),colors=["#ffb703","#fb7185","#4cc9f0","#10b981","#6c5ce7"];c.innerHTML="";
-    for(let i=0;i<28;i++){const e=document.createElement("i");e.style.left=rand(5,95)+"%";e.style.top=rand(-15,10)+"%";e.style.background=pick(colors);e.style.animationDelay=(Math.random()*.3)+"s";c.appendChild(e)}setTimeout(()=>c.innerHTML="",1600)
+    const layer=$("#confetti");
+    layer.innerHTML="";
+    const emojis=["🎉","🎊","⭐","🌟","✨","🥳","👏","🏆"];
+    for(let i=0;i<35;i++){
+      const e=document.createElement("span");
+      e.textContent=pick(emojis);
+      e.style.position="fixed";
+      e.style.left=rand(5,95)+"vw";
+      e.style.bottom="-50px";
+      e.style.fontSize=rand(25,50)+"px";
+      e.style.zIndex="9999";
+      layer.appendChild(e);
+      e.animate([
+        {transform:"translateY(0) rotate(0)",opacity:0},
+        {opacity:1},
+        {transform:"translateY(-100vh) rotate(720deg)",opacity:0}
+      ],{duration:2000+rand(0,1000),fill:"forwards"});
+    }
+    setTimeout(()=>layer.innerHTML="",3500);
   }
   function finishQuiz(){
     $("#progressBar").style.width="100%";showView("summary");const pct=Math.round(state.score/(state.count*10)*100);
@@ -440,7 +464,17 @@
     const rows=topicData.map(t=>{const s=topicStats(t.id),pct=s.total?Math.round(s.correct/s.total*100):0;return `<tr><td>${t.icon} ${t.id}. ${t.title}</td><td>${s.total}</td><td>${s.correct}</td><td>${pct}%</td></tr>`}).join("");
     $("#reportContent").innerHTML=`<table class="report-table"><thead><tr><th>පාඩම</th><th>ප්‍රශ්න</th><th>පළමු වර නිවැරදි</th><th>ප්‍රතිශතය</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
-  function speakCurrent(){
+  
+function speakSinhala(message){
+    if(!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(message);
+    u.lang="si-LK";
+    u.rate=.85;
+    speechSynthesis.speak(u);
+}
+
+function speakCurrent(){
     if(!("speechSynthesis" in window))return alert("මෙම බ්‍රවුසරයේ හඬ කියවීම නොමැත.");
     speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(state.current?.prompt||"");u.lang="si-LK";u.rate=.85;const vs=speechSynthesis.getVoices(),si=vs.find(v=>v.lang?.toLowerCase().startsWith("si"));if(si)u.voice=si;speechSynthesis.speak(u);
   }
